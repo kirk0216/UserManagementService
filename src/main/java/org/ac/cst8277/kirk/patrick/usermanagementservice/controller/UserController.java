@@ -8,6 +8,7 @@ import org.ac.cst8277.kirk.patrick.usermanagementservice.dao.UserDatabase;
 import org.ac.cst8277.kirk.patrick.usermanagementservice.model.SubscriberList;
 import org.ac.cst8277.kirk.patrick.usermanagementservice.model.User;
 import org.ac.cst8277.kirk.patrick.usermanagementservice.model.UserRole;
+import org.apache.logging.log4j.message.Message;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,8 @@ import java.util.UUID;
 
 @RestController
 public class UserController {
+    private static final String PUBLISHER_ROLE = "Publisher";
+
     @PostMapping(value = "/users")
     public ResponseEntity<Response> createUser(@RequestBody User user) {
         Response response = new Response();
@@ -26,7 +29,7 @@ public class UserController {
         database.open();
 
         user.generateId();
-        user.setPassword(Utils.hash(user.getPassword()));
+        user.setPassword(user.getPassword());
 
         database.insertUser(user);
         response.setHttpStatus(HttpStatus.OK);
@@ -45,7 +48,7 @@ public class UserController {
         UserDatabase database = new MySQLUserDatabase();
         database.open();
 
-        user.setPassword(Utils.hash(user.getPassword()));
+        user.setPassword(user.getPassword());
 
         database.updateUser(user);
         response.setHttpStatus(HttpStatus.OK);
@@ -220,6 +223,10 @@ public class UserController {
         response.setHttpStatus(HttpStatus.OK);
         response.setMessage("Success");
 
+        if (userRole.getRole().equals(PUBLISHER_ROLE)) {
+            MessageServiceAPI.notifyPublisherAdded(userRole.getId());
+        }
+
         database.close();
 
         return new ResponseEntity<>(response, response.getHttpStatus());
@@ -235,6 +242,10 @@ public class UserController {
         database.removeRole(id, role);
         response.setHttpStatus(HttpStatus.OK);
         response.setMessage("Success");
+
+        if (role.equals(PUBLISHER_ROLE)) {
+            MessageServiceAPI.notifyPublisherRemoved(id);
+        }
 
         database.close();
 

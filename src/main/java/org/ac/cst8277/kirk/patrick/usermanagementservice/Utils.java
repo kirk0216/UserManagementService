@@ -42,18 +42,4 @@ public final class Utils {
 
         return bytes;
     }
-
-    public static String hash(String input) {
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance(HASH_ALGO);
-            byte[] bytes = messageDigest.digest(input.getBytes(StandardCharsets.UTF_8));
-
-            return Base64.getEncoder().encodeToString(bytes);
-        }
-        catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-
-        return input;
-    }
 }

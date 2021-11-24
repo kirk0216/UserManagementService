@@ -23,7 +23,7 @@ public class AuthController {
 
         User user = database.getUserByUsername(credentials.getUsername());
 
-        if (user.getPassword().equals(Utils.hash(credentials.getPassword()))) {
+        if (user.getPassword().equals(credentials.getPassword())) {
             response.setHttpStatus(HttpStatus.OK);
             response.setMessage("Success");
             response.setData(user);

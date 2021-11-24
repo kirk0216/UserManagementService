@@ -33,3 +33,21 @@ CREATE TRIGGER Add_Default_Role
     AFTER INSERT
     ON user FOR EACH ROW
     INSERT INTO user_role (user_id, role_id) VALUES (NEW.id, (SELECT id FROM role WHERE name = 'Subscriber'));
+
+-- Create roles
+INSERT INTO role (id, name) VALUES (X'90CECD2046744226A0CFFAA5BF32F6D1', 'Subscriber');
+INSERT INTO role (id, name) VALUES (X'6EBC45228AC5401E94565D80D367A77A', 'Publisher');
+
+-- Create users
+-- Batman is a Producer
+INSERT INTO user (id, username, email, password) VALUES (X'16601887A8FF48C78A16F0CB82765759', 'Batman', 'batman@wayneenterprises.com', 'b4tc45e');
+INSERT INTO user_role (user_id, role_id) VALUES (X'16601887A8FF48C78A16F0CB82765759', X'6EBC45228AC5401E94565D80D367A77A');
+
+-- Robin is a Subscriber
+INSERT INTO user (id, username, email, password) VALUES (X'D3A9A38D0903448A92A706F00372544F', 'Robin', 'robin@wayneenterprises.com', 'b4tc45e');
+INSERT INTO user_role (user_id, role_id) VALUES (X'D3A9A38D0903448A92A706F00372544F', X'90CECD2046744226A0CFFAA5BF32F6D1');
+
+-- Joker is a Producer and Subscriber
+INSERT INTO user (id, username, email, password) VALUES (X'E09917C95357494FAE17A1DAAEC79B3A', 'Joker', 'joker@injustice.org', 'h4h4h3h3');
+INSERT INTO user_role (user_id, role_id) VALUES (X'E09917C95357494FAE17A1DAAEC79B3A', X'90CECD2046744226A0CFFAA5BF32F6D1');
+INSERT INTO user_role (user_id, role_id) VALUES (X'E09917C95357494FAE17A1DAAEC79B3A', X'6EBC45228AC5401E94565D80D367A77A');
