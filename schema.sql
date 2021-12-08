@@ -4,12 +4,18 @@ USE ums;
 
 CREATE TABLE ums.user (
     id BINARY(16) NOT NULL,
-    username VARCHAR(45) NOT NULL UNIQUE,
-    email VARCHAR(45) NOT NULL UNIQUE,
-    password VARCHAR(100) NOT NULL,
+    username VARCHAR(45) NOT NULL,
+    email VARCHAR(45),
+    password VARCHAR(100),
     created TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (id)
 );
+
+CREATE TABLE ums.session (
+    user_id BINARY(16) NOT NULL,
+    token BINARY(16) NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT NOW()
+)
 
 CREATE TABLE ums.role (
     id BINARY(16) NOT NULL,
@@ -29,11 +35,6 @@ CREATE TABLE ums.user_role (
         ON UPDATE CASCADE
 );
 
-CREATE TRIGGER Add_Default_Role
-    AFTER INSERT
-    ON user FOR EACH ROW
-    INSERT INTO user_role (user_id, role_id) VALUES (NEW.id, (SELECT id FROM role WHERE name = 'Subscriber'));
-
 -- Create roles
 INSERT INTO role (id, name) VALUES (X'90CECD2046744226A0CFFAA5BF32F6D1', 'Subscriber');
 INSERT INTO role (id, name) VALUES (X'6EBC45228AC5401E94565D80D367A77A', 'Publisher');
@@ -51,3 +52,8 @@ INSERT INTO user_role (user_id, role_id) VALUES (X'D3A9A38D0903448A92A706F003725
 INSERT INTO user (id, username, email, password) VALUES (X'E09917C95357494FAE17A1DAAEC79B3A', 'Joker', 'joker@injustice.org', 'h4h4h3h3');
 INSERT INTO user_role (user_id, role_id) VALUES (X'E09917C95357494FAE17A1DAAEC79B3A', X'90CECD2046744226A0CFFAA5BF32F6D1');
 INSERT INTO user_role (user_id, role_id) VALUES (X'E09917C95357494FAE17A1DAAEC79B3A', X'6EBC45228AC5401E94565D80D367A77A');
+
+CREATE TRIGGER Add_Default_Role
+    AFTER INSERT
+    ON user FOR EACH ROW
+    INSERT INTO user_role (user_id, role_id) VALUES (NEW.id, (SELECT id FROM role WHERE name = 'Subscriber'));

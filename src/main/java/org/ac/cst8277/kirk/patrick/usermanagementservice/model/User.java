@@ -5,20 +5,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.ac.cst8277.kirk.patrick.usermanagementservice.Utils;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class User extends AuthorizedRequest {
+public class User {
     private UUID id;
     private String username;
     private String email;
@@ -49,20 +45,6 @@ public class User extends AuthorizedRequest {
 
     public void addRole(String role) {
         roles.add(role);
-    }
-
-    public void removeRole(String role) {
-        roles.remove(role);
-    }
-
-    public boolean hasRole(String role) {
-        for (int i = 0; i < roles.size(); i++) {
-            if (roles.get(i).equals(role)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public static User getFromResultSet(ResultSet result) {

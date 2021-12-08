@@ -2,6 +2,7 @@ package org.ac.cst8277.kirk.patrick.usermanagementservice.dao;
 
 import org.ac.cst8277.kirk.patrick.usermanagementservice.Utils;
 import org.ac.cst8277.kirk.patrick.usermanagementservice.model.Role;
+import org.ac.cst8277.kirk.patrick.usermanagementservice.model.Session;
 import org.ac.cst8277.kirk.patrick.usermanagementservice.model.User;
 
 import java.sql.*;
@@ -10,8 +11,8 @@ import java.util.List;
 import java.util.UUID;
 
 public class MySQLUserDatabase implements UserDatabase {
-    private static final String CONNECTION_STRING = "jdbc:mysql://mysql:3306/ums";
-    private static final String DB_USER = "root";
+    private static final String CONNECTION_STRING = "jdbc:mysql://localhost:3306/ums";
+    private static final String DB_USER = "ums";
     private static final String DB_PASS = "password";
 
     private Connection connection;
@@ -62,7 +63,7 @@ public class MySQLUserDatabase implements UserDatabase {
             User user = null;
 
             while (resultSet.next()) {
-                if (user == null || !resultSet.getString("email").equals(user.getEmail())) {
+                if (user == null || !resultSet.getString("username").equals(user.getUsername())) {
                     user = User.getFromResultSet(resultSet);
                     users.add(user);
                 }
@@ -165,14 +166,52 @@ public class MySQLUserDatabase implements UserDatabase {
         return user;
     }
 
-    /**
-     * Get the user by their authentication token. For testing purposes, this is just their user id.
-     * @param token The user's authentication token.
-     * @return A user object mapped to the authentication token.
-     */
     @Override
-    public User getUserByToken(UUID token) {
-        return getUserById(token);
+    public void insertSession(User user, UUID token) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(SessionSQL.INSERT);
+            statement.setBytes(1, Utils.toBytes(user.getId()));
+            statement.setBytes(2, Utils.toBytes(token));
+            statement.executeUpdate();
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void deleteSession(Session session) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(SessionSQL.DELETE);
+            statement.setBytes(1, Utils.toBytes(session.getUserId()));
+            statement.setBytes(1, Utils.toBytes(session.getToken()));
+            statement.executeUpdate();
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public Session getSessionForToken(UUID token) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(SessionSQL.GET);
+            statement.setBytes(1, Utils.toBytes(token));
+
+            ResultSet results = statement.executeQuery();
+
+            if (results.next()) {
+                UUID userId = Utils.toUUID(results.getBytes("user_id"));
+                Timestamp created = results.getTimestamp("created");
+
+                return new Session(userId, token, created);
+            }
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     @Override
@@ -228,21 +267,6 @@ public class MySQLUserDatabase implements UserDatabase {
     }
 
     @Override
-    public void updateUser(User user) {
-        try {
-            PreparedStatement statement = connection.prepareStatement(UserSQL.UPDATE);
-            statement.setString(1, user.getUsername());
-            statement.setString(2, user.getEmail());
-            statement.setString(3, user.getPassword());
-            statement.setBytes(4, Utils.toBytes(user.getId()));
-            statement.executeUpdate();
-        }
-        catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
     public void deleteUser(UUID id) {
         try {
             PreparedStatement statement = connection.prepareStatement(UserSQL.DELETE);
@@ -285,32 +309,6 @@ public class MySQLUserDatabase implements UserDatabase {
         try {
             PreparedStatement statement = connection.prepareStatement(RoleSQL.DELETE);
             statement.setString(1, roleName);
-        }
-        catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void addRole(UUID userId, String role) {
-        try {
-            PreparedStatement statement = connection.prepareStatement(UserSQL.ADD_ROLE_TO_USER);
-            statement.setBytes(1, Utils.toBytes(userId));
-            statement.setString(2, role);
-            statement.executeUpdate();
-        }
-        catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void removeRole(UUID userId, String role) {
-        try {
-            PreparedStatement statement = connection.prepareStatement(UserSQL.REMOVE_ROLE_FROM_USER);
-            statement.setBytes(1, Utils.toBytes(userId));
-            statement.setString(2, role);
-            statement.executeUpdate();
         }
         catch (SQLException e) {
             e.printStackTrace();

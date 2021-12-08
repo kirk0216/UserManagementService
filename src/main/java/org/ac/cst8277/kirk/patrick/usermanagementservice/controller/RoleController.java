@@ -4,6 +4,7 @@ import org.ac.cst8277.kirk.patrick.usermanagementservice.model.Response;
 import org.ac.cst8277.kirk.patrick.usermanagementservice.dao.MySQLUserDatabase;
 import org.ac.cst8277.kirk.patrick.usermanagementservice.dao.UserDatabase;
 import org.ac.cst8277.kirk.patrick.usermanagementservice.model.Role;
+import org.ac.cst8277.kirk.patrick.usermanagementservice.model.Session;
 import org.ac.cst8277.kirk.patrick.usermanagementservice.model.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,19 +22,25 @@ public class RoleController {
         UserDatabase database = new MySQLUserDatabase();
         database.open();
 
-        User user = database.getUserByToken(role.getToken());
+        Session session = database.getSessionForToken(role.getToken());
 
-        if (user != null) {
-            role.generateId();
+        if (session != null) {
+            User user = database.getUserById(session.getUserId());
 
-            database.createRole(role);
-            response.setHttpStatus(HttpStatus.OK);
-            response.setMessage("Success");
-            response.setData(role);
-        }
-        else {
+            if (user != null) {
+                role.generateId();
+
+                database.createRole(role);
+                response.setHttpStatus(HttpStatus.OK);
+                response.setMessage("Success");
+                response.setData(role);
+            } else {
+                response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+                response.setMessage("Invalid token.");
+            }
+        } else {
             response.setHttpStatus(HttpStatus.UNAUTHORIZED);
-            response.setMessage("User is not authenticated.");
+            response.setMessage("Invalid token.");
         }
 
         database.close();
@@ -48,17 +55,27 @@ public class RoleController {
         UserDatabase database = new MySQLUserDatabase();
         database.open();
 
-        User user = database.getUserByToken(role.getToken());
+        Session session = database.getSessionForToken(role.getToken());
 
-        if (user != null) {
-            database.updateRole(role);
-            response.setHttpStatus(HttpStatus.OK);
-            response.setMessage("Success");
-            response.setData(role);
-        }
-        else {
+        if (Session.isValid(session)) {
+            User user = database.getUserById(session.getUserId());
+
+            if (user != null) {
+                database.updateRole(role);
+                response.setHttpStatus(HttpStatus.OK);
+                response.setMessage("Success");
+                response.setData(role);
+            } else {
+                response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+                response.setMessage("Invalid token.");
+            }
+        } else {
+            if (session != null) {
+                database.deleteSession(session);
+            }
+
             response.setHttpStatus(HttpStatus.UNAUTHORIZED);
-            response.setMessage("User is not authenticated.");
+            response.setMessage("Invalid token.");
         }
 
         database.close();
@@ -73,16 +90,26 @@ public class RoleController {
         UserDatabase database = new MySQLUserDatabase();
         database.open();
 
-        User user = database.getUserByToken(UUID.fromString(token));
+        Session session = database.getSessionForToken(UUID.fromString(token));
 
-        if (user != null) {
-            database.deleteRole(name);
-            response.setHttpStatus(HttpStatus.OK);
-            response.setMessage("Success");
-        }
-        else {
+        if (Session.isValid(session)) {
+            User user = database.getUserById(session.getUserId());
+
+            if (user != null) {
+                database.deleteRole(name);
+                response.setHttpStatus(HttpStatus.OK);
+                response.setMessage("Success");
+            } else {
+                response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+                response.setMessage("Invalid token.");
+            }
+        } else {
+            if (session != null) {
+                database.deleteSession(session);
+            }
+
             response.setHttpStatus(HttpStatus.UNAUTHORIZED);
-            response.setMessage("User is not authenticated.");
+            response.setMessage("Invalid token.");
         }
 
         database.close();
