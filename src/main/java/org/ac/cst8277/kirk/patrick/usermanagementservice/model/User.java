@@ -18,7 +18,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class User extends AuthorizedRequest {
     private UUID id;
     private String username;
     private String email;

@@ -10,7 +10,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Role {
+public class Role extends AuthorizedRequest {
     private UUID id;
     private String name;
 

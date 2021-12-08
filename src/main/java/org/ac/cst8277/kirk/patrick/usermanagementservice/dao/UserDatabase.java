@@ -17,6 +17,7 @@ public interface UserDatabase {
     User getUserById(UUID id);
     List<User> getManyById(List<UUID> ids);
     User getUserByUsername(String name);
+    User getUserByToken(UUID token);
     void updateUser(User user);
     void deleteUser(UUID id);
 

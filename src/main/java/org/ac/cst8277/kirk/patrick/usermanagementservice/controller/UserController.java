@@ -48,28 +48,44 @@ public class UserController {
         UserDatabase database = new MySQLUserDatabase();
         database.open();
 
-        user.setPassword(user.getPassword());
+        User tokenUser = database.getUserByToken(user.getToken());
 
-        database.updateUser(user);
-        response.setHttpStatus(HttpStatus.OK);
-        response.setMessage("Success");
-        response.setData(user);
+        if (tokenUser != null && user.getId().equals(tokenUser.getId())) {
+            user.setPassword(user.getPassword());
+
+            database.updateUser(user);
+            response.setHttpStatus(HttpStatus.OK);
+            response.setMessage("Success");
+            response.setData(user);
+        }
+        else {
+            response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+            response.setMessage("User is not authenticated.");
+        }
 
         database.close();
 
         return new ResponseEntity<>(response, response.getHttpStatus());
     }
 
-    @DeleteMapping(value = "/users")
-    public ResponseEntity<Response> deleteUser(@RequestParam String id) {
+    @DeleteMapping(value = "/users/{id}")
+    public ResponseEntity<Response> deleteUser(@PathVariable String id, @RequestParam String token) {
         Response response = new Response();
 
         UserDatabase database = new MySQLUserDatabase();
         database.open();
 
-        database.deleteUser(UUID.fromString(id));
-        response.setHttpStatus(HttpStatus.OK);
-        response.setMessage("Success");
+        User user = database.getUserByToken(UUID.fromString(token));
+
+        if (user != null && user.getEmail().equals(UUID.fromString(id))) {
+            database.deleteUser(UUID.fromString(id));
+            response.setHttpStatus(HttpStatus.OK);
+            response.setMessage("Success");
+        }
+        else {
+            response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+            response.setMessage("User is not authenticated.");
+        }
 
         database.close();
 
@@ -77,22 +93,29 @@ public class UserController {
     }
 
     @GetMapping(value = "/users")
-    public ResponseEntity<Response> getAllUsers() {
+    public ResponseEntity<Response> getAllUsers(@RequestParam String token) {
         Response response = new Response();
 
         UserDatabase database = new MySQLUserDatabase();
         database.open();
 
-        List<User> users = database.getAllUsers();
+        User user = database.getUserByToken(UUID.fromString(token));
 
-        if (users.size() > 0) {
-            response.setHttpStatus(HttpStatus.OK);
-            response.setMessage("Success");
-            response.setData(users);
+        if (user != null) {
+            List<User> users = database.getAllUsers();
+
+            if (users.size() > 0) {
+                response.setHttpStatus(HttpStatus.OK);
+                response.setMessage("Success");
+                response.setData(users);
+            } else {
+                response.setHttpStatus(HttpStatus.NOT_FOUND);
+                response.setMessage("No users found.");
+            }
         }
         else {
-            response.setHttpStatus(HttpStatus.NOT_FOUND);
-            response.setMessage("No users found.");
+            response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+            response.setMessage("User is not authenticated.");
         }
 
         database.close();
@@ -101,22 +124,30 @@ public class UserController {
     }
 
     @GetMapping(value = "/users/publishers")
-    public ResponseEntity<Response> getPublishers() {
+    public ResponseEntity<Response> getPublishers(@RequestParam String token) {
         Response response = new Response();
 
         UserDatabase database = new MySQLUserDatabase();
         database.open();
 
-        List<User> users = database.getPublishers();
+        User user = database.getUserByToken(UUID.fromString(token));
 
-        if (users.size() > 0) {
-            response.setHttpStatus(HttpStatus.OK);
-            response.setMessage("Success");
-            response.setData(users);
+        if (user != null) {
+            List<User> users = database.getPublishers();
+
+            if (users.size() > 0) {
+                response.setHttpStatus(HttpStatus.OK);
+                response.setMessage("Success");
+                response.setData(users);
+            }
+            else {
+                response.setHttpStatus(HttpStatus.NOT_FOUND);
+                response.setMessage("No users found.");
+            }
         }
         else {
-            response.setHttpStatus(HttpStatus.NOT_FOUND);
-            response.setMessage("No users found.");
+            response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+            response.setMessage("User is not authenticated.");
         }
 
         database.close();
@@ -125,22 +156,29 @@ public class UserController {
     }
 
     @GetMapping(value = "/users/subscribers")
-    public ResponseEntity<Response> getSubscribers() {
+    public ResponseEntity<Response> getSubscribers(@RequestParam String token) {
         Response response = new Response();
 
         UserDatabase database = new MySQLUserDatabase();
         database.open();
 
-        List<User> users = database.getSubscribers();
+        User user = database.getUserByToken(UUID.fromString(token));
 
-        if (users.size() > 0) {
-            response.setHttpStatus(HttpStatus.OK);
-            response.setMessage("Success");
-            response.setData(users);
+        if (user != null) {
+            List<User> users = database.getSubscribers();
+
+            if (users.size() > 0) {
+                response.setHttpStatus(HttpStatus.OK);
+                response.setMessage("Success");
+                response.setData(users);
+            } else {
+                response.setHttpStatus(HttpStatus.NOT_FOUND);
+                response.setMessage("No users found.");
+            }
         }
         else {
-            response.setHttpStatus(HttpStatus.NOT_FOUND);
-            response.setMessage("No users found.");
+            response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+            response.setMessage("User is not authenticated.");
         }
 
         database.close();
@@ -149,62 +187,79 @@ public class UserController {
     }
 
     @GetMapping(value = "/users/subscribers/{id}")
-    public ResponseEntity<Response> getSubscribersTo(@PathVariable String id) {
+    public ResponseEntity<Response> getSubscribersTo(@PathVariable String id, @RequestParam String token) {
         Response response = new Response();
 
-        UUID publisherId = UUID.fromString(id);
+        UserDatabase database = new MySQLUserDatabase();
+        database.open();
 
-        List<UUID> ids = new MessageServiceAPI()
-                .getSubscribersTo(publisherId);
+        User user = database.getUserByToken(UUID.fromString(token));
 
-        if (ids != null && ids.size() > 0) {
-            UserDatabase database = new MySQLUserDatabase();
-            database.open();
+        if (user != null) {
+            UUID publisherId = UUID.fromString(id);
 
-            User publisher = database.getUserById(publisherId);
+            List<UUID> ids = new MessageServiceAPI()
+                    .getSubscribersTo(publisherId);
 
-            if (publisher != null) {
-                List<User> subscribers = database.getManyById(ids);
+            if (ids != null && ids.size() > 0) {
 
-                response.setHttpStatus(HttpStatus.OK);
-                response.setMessage("Success");
-                response.setData(new SubscriberList(publisher, subscribers));
+
+                User publisher = database.getUserById(publisherId);
+
+                if (publisher != null) {
+                    List<User> subscribers = database.getManyById(ids);
+
+                    response.setHttpStatus(HttpStatus.OK);
+                    response.setMessage("Success");
+                    response.setData(new SubscriberList(publisher, subscribers));
+                }
+            } else {
+                response.setHttpStatus(HttpStatus.NOT_FOUND);
+                response.setMessage("No users found.");
             }
-            database.close();
         }
         else {
-            response.setHttpStatus(HttpStatus.NOT_FOUND);
-            response.setMessage("No users found.");
+            response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+            response.setMessage("User is not authenticated.");
         }
+
+        database.close();
 
         return new ResponseEntity<>(response, response.getHttpStatus());
     }
 
     @GetMapping(value = "/users/find")
     public ResponseEntity<Response> getUser(@RequestParam(required = false) String username,
-                                                  @RequestParam(required = false) String id) {
+                                            @RequestParam(required = false) String id,
+                                            @RequestParam String token) {
         Response response = new Response();
 
         UserDatabase database = new MySQLUserDatabase();
         database.open();
 
-        User user = null;
+        User tokenUser = database.getUserByToken(UUID.fromString(token));
 
-        if (id != null) {
-            user = database.getUserById(UUID.fromString(id));
-        }
-        else if (username != null) {
-            user = database.getUserByUsername(username);
-        }
+        if (tokenUser != null) {
+            User user = null;
 
-        if (user != null) {
-            response.setHttpStatus(HttpStatus.OK);
-            response.setMessage("Success");
-            response.setData(user);
+            if (id != null) {
+                user = database.getUserById(UUID.fromString(id));
+            } else if (username != null) {
+                user = database.getUserByUsername(username);
+            }
+
+            if (user != null) {
+                response.setHttpStatus(HttpStatus.OK);
+                response.setMessage("Success");
+                response.setData(user);
+            } else {
+                response.setHttpStatus(HttpStatus.NOT_FOUND);
+                response.setMessage("No user found.");
+            }
         }
         else {
-            response.setHttpStatus(HttpStatus.NOT_FOUND);
-            response.setMessage("No user found.");
+            response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+            response.setMessage("User is not authenticated.");
         }
 
         database.close();
@@ -219,12 +274,20 @@ public class UserController {
         UserDatabase database = new MySQLUserDatabase();
         database.open();
 
-        database.addRole(userRole.getId(), userRole.getRole());
-        response.setHttpStatus(HttpStatus.OK);
-        response.setMessage("Success");
+        User user = database.getUserByToken(userRole.getToken());
 
-        if (userRole.getRole().equals(PUBLISHER_ROLE)) {
-            MessageServiceAPI.notifyPublisherAdded(userRole.getId());
+        if (user != null) {
+            database.addRole(userRole.getId(), userRole.getRole());
+            response.setHttpStatus(HttpStatus.OK);
+            response.setMessage("Success");
+
+            if (userRole.getRole().equals(PUBLISHER_ROLE)) {
+                MessageServiceAPI.notifyPublisherAdded(userRole.getId());
+            }
+        }
+        else {
+            response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+            response.setMessage("User is not authenticated.");
         }
 
         database.close();
@@ -232,19 +295,28 @@ public class UserController {
         return new ResponseEntity<>(response, response.getHttpStatus());
     }
 
-    @DeleteMapping(value = "/users/role")
-    public ResponseEntity<Response> removeRoleFromUser(@RequestParam UUID id, @RequestParam String role) {
+    @DeleteMapping(value = "/users/role/{id}/{role}")
+    public ResponseEntity<Response> removeRoleFromUser(@PathVariable UUID id, @PathVariable String role,
+                                                       @RequestParam String token) {
         Response response = new Response();
 
         UserDatabase database = new MySQLUserDatabase();
         database.open();
 
-        database.removeRole(id, role);
-        response.setHttpStatus(HttpStatus.OK);
-        response.setMessage("Success");
+        User user = database.getUserByToken(UUID.fromString(token));
 
-        if (role.equals(PUBLISHER_ROLE)) {
-            MessageServiceAPI.notifyPublisherRemoved(id);
+        if (user != null) {
+            database.removeRole(id, role);
+            response.setHttpStatus(HttpStatus.OK);
+            response.setMessage("Success");
+
+            if (role.equals(PUBLISHER_ROLE)) {
+                MessageServiceAPI.notifyPublisherRemoved(id);
+            }
+        }
+        else {
+            response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+            response.setMessage("User is not authenticated.");
         }
 
         database.close();

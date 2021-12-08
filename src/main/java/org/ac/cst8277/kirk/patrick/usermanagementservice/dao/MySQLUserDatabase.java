@@ -165,6 +165,16 @@ public class MySQLUserDatabase implements UserDatabase {
         return user;
     }
 
+    /**
+     * Get the user by their authentication token. For testing purposes, this is just their user id.
+     * @param token The user's authentication token.
+     * @return A user object mapped to the authentication token.
+     */
+    @Override
+    public User getUserByToken(UUID token) {
+        return getUserById(token);
+    }
+
     @Override
     public List<User> getPublishers() {
         List<User> users = new ArrayList<>();

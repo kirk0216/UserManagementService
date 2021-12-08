@@ -26,7 +26,9 @@ public class AuthController {
         if (user.getPassword().equals(credentials.getPassword())) {
             response.setHttpStatus(HttpStatus.OK);
             response.setMessage("Success");
-            response.setData(user);
+
+            // For testing purposes, the authentication token is just the user's id.
+            response.setData(user.getId());
         }
         else {
             response.setHttpStatus(HttpStatus.BAD_REQUEST);

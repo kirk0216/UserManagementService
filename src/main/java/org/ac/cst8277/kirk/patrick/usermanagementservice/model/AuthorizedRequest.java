@@ -9,15 +9,10 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRole extends AuthorizedRequest {
-    private UUID id;
-    private String role;
+public abstract class AuthorizedRequest {
+    private UUID token;
 
-    public UUID getId() {
-        return id;
-    }
-
-    public String getRole() {
-        return role;
+    public UUID getToken() {
+        return token;
     }
 }
