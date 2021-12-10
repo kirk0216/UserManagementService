@@ -184,7 +184,7 @@ public class MySQLUserDatabase implements UserDatabase {
         try {
             PreparedStatement statement = connection.prepareStatement(SessionSQL.DELETE);
             statement.setBytes(1, Utils.toBytes(session.getUserId()));
-            statement.setBytes(1, Utils.toBytes(session.getToken()));
+            statement.setBytes(2, Utils.toBytes(session.getToken()));
             statement.executeUpdate();
         }
         catch (SQLException e) {

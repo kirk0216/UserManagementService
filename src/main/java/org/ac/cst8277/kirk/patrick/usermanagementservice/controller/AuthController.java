@@ -42,6 +42,10 @@ public class AuthController {
         UUID token = null;
 
         if (!Session.isValid(session)) {
+            if (session != null) {
+                database.deleteSession(session);
+            }
+
             token = UUID.randomUUID();
             database.insertSession(user, token);
         } else {
