@@ -336,4 +336,30 @@ public class MySQLUserDatabase implements UserDatabase {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public void addRole(UUID userId, String role) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(UserSQL.ADD_ROLE_TO_USER);
+            statement.setBytes(1, Utils.toBytes(userId));
+            statement.setString(2, role);
+            statement.executeUpdate();
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void removeRole(UUID userId, String role) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(UserSQL.REMOVE_ROLE_FROM_USER);
+            statement.setBytes(1, Utils.toBytes(userId));
+            statement.setString(2, role);
+            statement.executeUpdate();
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

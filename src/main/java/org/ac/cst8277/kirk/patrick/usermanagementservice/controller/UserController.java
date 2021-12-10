@@ -3,11 +3,9 @@ package org.ac.cst8277.kirk.patrick.usermanagementservice.controller;
 import org.ac.cst8277.kirk.patrick.usermanagementservice.MessageServiceAPI;
 import org.ac.cst8277.kirk.patrick.usermanagementservice.dao.MySQLUserDatabase;
 import org.ac.cst8277.kirk.patrick.usermanagementservice.dao.UserDatabase;
-import org.ac.cst8277.kirk.patrick.usermanagementservice.model.Response;
-import org.ac.cst8277.kirk.patrick.usermanagementservice.model.Session;
-import org.ac.cst8277.kirk.patrick.usermanagementservice.model.SubscriberList;
-import org.ac.cst8277.kirk.patrick.usermanagementservice.model.User;
+import org.ac.cst8277.kirk.patrick.usermanagementservice.model.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -280,6 +278,61 @@ public class UserController {
                 response.setHttpStatus(HttpStatus.UNAUTHORIZED);
                 response.setMessage("Invalid token.");
             }
+        } else {
+            if (session != null) {
+                database.deleteSession(session);
+            }
+
+            response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+            response.setMessage("Invalid token.");
+        }
+
+        database.close();
+
+        return new ResponseEntity<>(response, response.getHttpStatus());
+    }
+
+    @PostMapping(value = "/users/role", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Response> addRoleToUser(@RequestBody UserRole userRole) {
+        Response response = new Response();
+
+        UserDatabase database = new MySQLUserDatabase();
+        database.open();
+
+        Session session = database.getSessionForToken(userRole.getToken());
+
+        if (Session.isValid(session)) {
+            database.addRole(userRole.getId(), userRole.getRole());
+            response.setHttpStatus(HttpStatus.OK);
+            response.setMessage("Success");
+        } else {
+            if (session != null) {
+                database.deleteSession(session);
+            }
+
+            response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+            response.setMessage("Invalid token.");
+        }
+
+        database.close();
+
+        return new ResponseEntity<>(response, response.getHttpStatus());
+    }
+
+    @DeleteMapping(value = "/users/role")
+    public ResponseEntity<Response> removeRoleFromUser(@RequestParam UUID id, @RequestParam String role,
+                                                       @RequestParam String token) {
+        Response response = new Response();
+
+        UserDatabase database = new MySQLUserDatabase();
+        database.open();
+
+        Session session = database.getSessionForToken(UUID.fromString(token));
+
+        if (Session.isValid(session)) {
+            database.removeRole(id, role);
+            response.setHttpStatus(HttpStatus.OK);
+            response.setMessage("Success");
         } else {
             if (session != null) {
                 database.deleteSession(session);

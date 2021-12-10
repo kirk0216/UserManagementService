@@ -28,4 +28,7 @@ public interface UserDatabase {
     void createRole(Role role);
     void updateRole(Role role);
     void deleteRole(String roleName);
+
+    void addRole(UUID userId, String role);
+    void removeRole(UUID userId, String role);
 }
