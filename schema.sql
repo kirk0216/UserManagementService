@@ -14,7 +14,8 @@ CREATE TABLE ums.user (
 CREATE TABLE ums.session (
     user_id BINARY(16) NOT NULL,
     token BINARY(16) NOT NULL,
-    created TIMESTAMP NOT NULL DEFAULT NOW()
+    created TIMESTAMP NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id)
 )
 
 CREATE TABLE ums.role (

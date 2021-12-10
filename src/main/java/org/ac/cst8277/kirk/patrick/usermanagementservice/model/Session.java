@@ -19,7 +19,7 @@ public class Session {
 
     public static boolean isValid(Session session) {
         if (session != null) {
-            Duration duration = Duration.between(Instant.now(), session.getCreated().toInstant());
+            Duration duration = Duration.between(session.getCreated().toInstant(), Instant.now());
 
             return duration.toMinutes() < 15;
         }

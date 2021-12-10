@@ -193,9 +193,31 @@ public class MySQLUserDatabase implements UserDatabase {
     }
 
     @Override
+    public Session getSessionForUser(User user) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(SessionSQL.GET_BY_USER_ID);
+            statement.setBytes(1, Utils.toBytes(user.getId()));
+
+            ResultSet results = statement.executeQuery();
+
+            if (results.next()) {
+                UUID token = Utils.toUUID(results.getBytes("token"));
+                Timestamp created = results.getTimestamp("created");
+
+                return new Session(user.getId(), token, created);
+            }
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Override
     public Session getSessionForToken(UUID token) {
         try {
-            PreparedStatement statement = connection.prepareStatement(SessionSQL.GET);
+            PreparedStatement statement = connection.prepareStatement(SessionSQL.GET_BY_TOKEN);
             statement.setBytes(1, Utils.toBytes(token));
 
             ResultSet results = statement.executeQuery();

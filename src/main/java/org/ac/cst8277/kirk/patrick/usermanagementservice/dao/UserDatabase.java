@@ -22,6 +22,7 @@ public interface UserDatabase {
 
     void insertSession(User user, UUID token);
     void deleteSession(Session session);
+    Session getSessionForUser(User user);
     Session getSessionForToken(UUID token);
 
     void createRole(Role role);

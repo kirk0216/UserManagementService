@@ -99,8 +99,7 @@ public class UserController {
                 response.setHttpStatus(HttpStatus.UNAUTHORIZED);
                 response.setMessage("Invalid token.");
             }
-        }
-        else {
+        } else {
             if (session != null) {
                 database.deleteSession(session);
             }
